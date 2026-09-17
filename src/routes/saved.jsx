@@ -1,6 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { Bookmark } from "lucide-react";
 import { Page } from "@/components/Layout";
-import { RecipeCard } from "@/components/RecipeCard";
+import { EmptyState } from "@/components/EmptyState";
+import { RecipeGrid } from "@/components/RecipeGrid";
+import { SectionHeading } from "@/components/SectionHeading";
 import { RECIPES } from "@/data/recipes";
 import { useBookmarks } from "@/hooks/useBookmarks";
 const Route = createFileRoute("/saved")({
@@ -20,27 +23,47 @@ const Route = createFileRoute("/saved")({
   component: Saved
 });
 function Saved() {
-  const { ids } = useBookmarks();
+  const { ids, loading } = useBookmarks();
   const saved = RECIPES.filter((r) => ids.includes(r.id));
+  const totalCost = saved.reduce((sum, recipe) => sum + recipe.cost, 0);
   return <Page>
-      <div className="mx-auto max-w-6xl px-4 py-10">
-        <h1 className="font-display text-3xl font-bold text-foreground sm:text-4xl">Saved Recipes</h1>
-        <p className="mt-2 text-muted-foreground">Everything you bookmarked, ready when you are.</p>
+      <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-14">
+        <SectionHeading
+    as="h1"
+    eyebrow="Your cookbook"
+    title="Saved Recipes"
+    description="Everything you bookmarked, ready when you are."
+  />
 
-        {saved.length > 0 ? <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {saved.map((r) => <RecipeCard key={r.id} recipe={r} />)}
-          </div> : <div className="mt-10 rounded-3xl border border-dashed border-border p-12 text-center">
-            <p className="text-lg font-semibold text-foreground">No saved recipes yet</p>
-            <p className="mt-1 text-muted-foreground">
-              Tap the bookmark icon on any recipe to keep it here.
-            </p>
+        {!loading && saved.length > 0 ? <p className="mt-6 text-sm text-muted-foreground">
+            {saved.length} saved {saved.length === 1 ? "recipe" : "recipes"} · roughly ₹{totalCost} to
+            cook them all
+          </p> : null}
+
+        <RecipeGrid
+    className="mt-6"
+    recipes={saved}
+    loading={loading}
+    skeletonCount={3}
+    empty={<EmptyState
+    icon={Bookmark}
+    title="No saved recipes yet"
+    description="Tap the bookmark icon on any recipe and it will be waiting for you here."
+  >
             <Link
     to="/discover"
-    className="mt-6 inline-flex rounded-full bg-red-500 px-6 py-3 text-sm font-semibold text-primary-foreground transition hover:-translate-y-0.5"
+    className="rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition duration-300 hover:-translate-y-0.5"
   >
               Browse recipes
             </Link>
-          </div>}
+            <Link
+    to="/quick"
+    className="rounded-full border border-border bg-card px-6 py-3 text-sm font-semibold text-foreground transition duration-300 hover:-translate-y-0.5 hover:border-primary hover:text-primary"
+  >
+              Quick meals
+            </Link>
+          </EmptyState>}
+  />
       </div>
     </Page>;
 }
